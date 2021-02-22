@@ -16,9 +16,11 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.parse.FindCallback;
+import com.parse.LogOutCallback;
 import com.parse.Parse;
 import com.parse.ParseException;
 import com.parse.ParseFile;
@@ -37,6 +39,9 @@ public class MainActivity extends AppCompatActivity {
     private Button btnCaptureImage;
     private ImageView ivPostImage;
     private Button btnSubmit;
+    private Button btnLogout;
+    private ProgressBar pbLoading;
+
     private File photoFile;
     public String photoFileName = "photo.jpg";
 
@@ -50,6 +55,8 @@ public class MainActivity extends AppCompatActivity {
         btnCaptureImage = findViewById(R.id.btnCaptureImage);
         ivPostImage = findViewById(R.id.ivPostImage);
         btnSubmit = findViewById(R.id.btnSubmit);
+        btnLogout = findViewById(R.id.btnLogout);
+        pbLoading = findViewById(R.id.pbLoading);
 
         btnCaptureImage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -72,9 +79,40 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 ParseUser currentUser = ParseUser.getCurrentUser();
+                pbLoading.setVisibility(View.VISIBLE);
                 savePost(description, currentUser, photoFile);
             }
         });
+
+        btnLogout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                userLogout();
+            }
+        });
+
+    }
+
+    private void userLogout() {
+        ParseUser.logOutInBackground(new LogOutCallback() {
+            @Override
+            public void done(ParseException e) {
+                if(e != null) {
+                    Log.e(TAG, "Error logging out!", e);
+                    Toast.makeText(MainActivity.this, "Error logging out!", Toast.LENGTH_SHORT).show();
+                }
+                Log.i(TAG, "Successfully logged out!");
+                Toast.makeText(MainActivity.this,"Successfully logged out!", Toast.LENGTH_SHORT).show();
+                goLoginActivity();
+            }
+        });
+        ParseUser currentUser = ParseUser.getCurrentUser();
+    }
+
+    private void goLoginActivity(){
+        Intent i = new Intent(MainActivity.this, LoginActivity.class);
+        startActivity(i);
+        finish();
     }
 
     private void launchCamera() {
@@ -145,6 +183,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "Post save was successful!!") ;
                 etDescription.setText("");
                 ivPostImage.setImageResource(0);
+                pbLoading.setVisibility(View.INVISIBLE);
             }
         });
     }
